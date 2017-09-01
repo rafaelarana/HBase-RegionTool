@@ -356,11 +356,14 @@ public class RegionsTool extends AbstractHBaseTool {
         addOptWithArg(OPT_USE_MAX_NUM, "Applies a minimum number of regions per stage. Set (" + OPT_MAX_COLD_NUM + ","
                 + OPT_MAX_WARM_NUM + "," + OPT_MAX_HOT_NUM + ") customize.");
 
-        addOptWithArg(OPT_MAX_NUM, "Number used to set a max number of regions. Default=10");
+        addOptWithArg(OPT_MAX_NUM, "Number used to set a max number of regions. Default=" + SimpleMaxNumberRegionPlanner.DEFAULT_MAX_REGION);
 
-        addOptWithArg(OPT_MAX_COLD_NUM, "Number of months data used to set a max number of regions in the cold stage. Default=10");
-        addOptWithArg(OPT_MAX_WARM_NUM, "Number used to set a max number of regions in the warm stage. Default=10");
-        addOptWithArg(OPT_MAX_HOT_NUM, "Number used to set a max number of regions in the hot stage. Default=10");
+        addOptWithArg(OPT_MAX_COLD_NUM, "Number of months data used to set a max number of regions in the cold stage. Default="
+                + SimpleMaxNumberRegionPlanner.DEFAULT_MAX_REGION);
+        addOptWithArg(OPT_MAX_WARM_NUM, "Number used to set a max number of regions in the warm stage. Default="
+                + SimpleMaxNumberRegionPlanner.DEFAULT_MAX_REGION);
+        addOptWithArg(OPT_MAX_HOT_NUM, "Number used to set a max number of regions in the hot stage. Default="
+                + SimpleMaxNumberRegionPlanner.DEFAULT_MAX_REGION);
 
         addOptWithArg(OPT_NUM_HOT_MONTHS, "Number of months to consider data as hot. Only used for staged tables. Default="
                 + StageByDateBuilder.DEFAULT_HOT_EXPIRATION_IN_MONTHS);

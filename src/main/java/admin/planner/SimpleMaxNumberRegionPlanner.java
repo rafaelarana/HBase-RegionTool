@@ -28,7 +28,7 @@ public class SimpleMaxNumberRegionPlanner extends AbstractRegionPlanner {
      */
     public static final String NORMALIZER_MAX_KEY_PROPERTY = "hbase.normalizer.max.num";
 
-    static final int DEFAULT_MAX_REGION = 100;
+    public static final int DEFAULT_MAX_REGION = 100;
 
     private int maxNumRegions;
     private boolean useAverage = true;
