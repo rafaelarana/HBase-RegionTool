@@ -414,7 +414,8 @@ public class RegionsTool extends AbstractHBaseTool {
 
     @Override
     protected void printUsage() {
-        printUsage("java " + getClass().getName() + " <options>", "Options:", "");
+        //printUsage("java " + getClass().getName() + " <options>", "Options:", "");
+        printUsage("/region-tool.sh <options>", "Options:", "");
     }
 
 
