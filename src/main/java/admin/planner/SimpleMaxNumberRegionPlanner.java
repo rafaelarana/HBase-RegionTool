@@ -72,7 +72,7 @@ public class SimpleMaxNumberRegionPlanner extends AbstractRegionPlanner {
 
         if (numberOfRegions > maxNumberOfRegions) {
 
-            LOG.debug("Table " + table + " number of regions (" + numberOfRegions + ") over max ("
+            LOG.info("Table " + table + " number of regions (" + numberOfRegions + ") over max ("
                     + maxNumberOfRegions + "). Checking for regions to merge with size over avg");
 
             if (useAverage) {
