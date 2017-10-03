@@ -9,6 +9,7 @@ import org.apache.hadoop.hbase.classification.InterfaceAudience;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
+import org.apache.hadoop.hbase.master.normalizer.MergeNormalizationPlan;
 import org.apache.hadoop.hbase.master.normalizer.NormalizationPlan;
 import org.apache.hadoop.hbase.util.AbstractHBaseTool;
 
@@ -54,7 +55,11 @@ public class RegionsTool extends AbstractHBaseTool {
     protected static final String OPT_USE_MAX_NUM= "use_max_num";
     protected static final String OPT_NO_STAGE= "no_stage";
 
-    protected static final String OPT_PLAN_ONLY = "report";
+    protected static final String OPT_REPORT = "report";
+    protected static final String OPT_ADD_MONTH = "add_month";
+    protected static final String OPT_SPLIT_MONTH = "split_month";
+
+
     protected static final String OPT_ITERATIONS = "iterations";
     protected static final String OPT_SLEEP = "sleep";
     protected static final String OPT_SPLIT_FACTOR = "split_factor";
@@ -78,8 +83,19 @@ public class RegionsTool extends AbstractHBaseTool {
     protected static final String OPT_NUM_WARM_MONTHS = "num_warm_months";
     protected static final String OPT_NUM_COLD_MONTHS = "num_cold_months";
 
+    /**
+     * Default number of iterations
+     */
     protected static final int DEFAULT_ITERATIONS = 1;
+    /**
+     * Default sleep time between iterations (in seconds)
+     */
     protected static final int DEFAULT_SLEEP = 300;
+
+    /**
+     *
+     */
+    protected static final int DEFAULT_SLEEP_AFTER_MERGE = 5* 1000;
 
     int iterations = DEFAULT_ITERATIONS;
     int sleep = DEFAULT_SLEEP;
@@ -90,12 +106,13 @@ public class RegionsTool extends AbstractHBaseTool {
     List<NormalizationPlanner> plannerList = new ArrayList<>();
 
     String sTable = null;
-    boolean isPlanOnly = false;
+    boolean isReport = false;
     boolean useMaxSize = true;
     boolean useAvgSize = false;
     boolean useMinNum = false;
     boolean useMaxNum = false;
     boolean isMultiStage = true;
+    boolean isAddNewMonth = false;
 
 
     public static void main(String[] args) throws Throwable {
@@ -115,6 +132,10 @@ public class RegionsTool extends AbstractHBaseTool {
         TableName tableName = TableName.valueOf(sTable);
 
         int counter = 1;
+        // Init the tool
+        init(tableName);
+
+
 
         LOG.debug("Iterations:"+iterations);
 
@@ -124,8 +145,7 @@ public class RegionsTool extends AbstractHBaseTool {
 
             LOG.info("Starting Iteration:" + counter);
 
-            // Init the tool
-            init(tableName);
+
 
 
             for (NormalizationPlanner planner: plannerList ) {
@@ -136,7 +156,7 @@ public class RegionsTool extends AbstractHBaseTool {
                 List<NormalizationPlan> plans = planner.computePlanForTable(tableName);
 
                 // Execute the list of plans
-                if (!isPlanOnly ) {
+                if (!isReport) {
                     normalizeRegions(plans);
                 }
                 LOG.info("End Planner: " + planner.toString());
@@ -146,14 +166,29 @@ public class RegionsTool extends AbstractHBaseTool {
 
             }
 
-            // Compute the plans
-            //List<NormalizationPlan> plans = computePlanForTable(tableName);
-
             LOG.info("End Iteration:" + counter);
 
             counter++;
 
         }
+
+        if (isAddNewMonth) {
+
+            LOG.info("Adding a new month");
+            MonthlySplitter ms = new MonthlySplitter(this.connection,tableName, conf,isReport);
+
+            if (cmd.hasOption(OPT_SPLIT_MONTH)) {
+                String splitPoint = cmd.getOptionValue(OPT_SPLIT_MONTH);
+                if ( splitPoint.length() != 6 )
+                    throw new IllegalArgumentException(OPT_SPLIT_MONTH + " argument must be 6 characters and format YYYYMM");
+
+                ms.split(splitPoint);
+            } else {
+                ms.split(StageByDateBuilder.getCurrent());
+            }
+
+        }
+
 
         return 0;
     }
@@ -170,7 +205,7 @@ public class RegionsTool extends AbstractHBaseTool {
         if (useMaxSize) {
             //addPlanner(new MaxSizeRegionPlanner(connection, tableName, conf));
             if (isMultiStage){
-                addPlanner(new StagedMaxSizeRegionPlanner(connection, tableName, conf));
+                    addPlanner(new StagedMaxSizeRegionPlanner(connection, tableName, conf));
             } else {
                 addPlanner(new SimpleMaxSizeRegionPlanner(connection, tableName, conf));
             }
@@ -211,7 +246,9 @@ public class RegionsTool extends AbstractHBaseTool {
 
         this.cmd = cmd;
         sTable = cmd.getOptionValue(OPT_TABLENAME);
-        isPlanOnly = cmd.hasOption(OPT_PLAN_ONLY);
+        isReport = cmd.hasOption(OPT_REPORT);
+        isAddNewMonth = cmd.hasOption(OPT_ADD_MONTH);
+
         if (cmd.hasOption(OPT_ITERATIONS)) {
             this.iterations = parseInt(cmd.getOptionValue(OPT_ITERATIONS),DEFAULT_ITERATIONS);
             this.sleep = parseInt(cmd.getOptionValue(OPT_SLEEP),DEFAULT_SLEEP);
@@ -325,8 +362,10 @@ public class RegionsTool extends AbstractHBaseTool {
         addRequiredOptWithArg("tablename", "Name of the table to normalize");
         addOptWithArg(OPT_ITERATIONS, "Number of iterations it will run the normalization process (defaults to 1).");
         addOptWithArg(OPT_SLEEP, "Number of seconds to sleep between iterations  (defaults to 300 secs)");
-        addOptNoArg(OPT_PLAN_ONLY,"Disables plan execution. Only compute the normalization plans.");
+        addOptNoArg(OPT_REPORT,"Disables plan execution. Only compute the normalization plans.");
         addOptNoArg(OPT_NO_STAGE,"Use for those tables without sets/stages of regions.");
+        addOptNoArg(OPT_ADD_MONTH, "Adds a new month splitting the hot stage  using the same split points from the last month as reference.");
+        addOptWithArg(OPT_SPLIT_MONTH, "SplitPoint used by the " + OPT_ADD_MONTH + " option. Must follow the format YYYYMM");
 
 
         // Options for Max Size Region Planner
@@ -402,6 +441,10 @@ public class RegionsTool extends AbstractHBaseTool {
             for (NormalizationPlan plan : plans) {
                 LOG.debug(plan);
                 plan.execute(admin);
+
+                if (plan instanceof MergeNormalizationPlan) {
+                    RegionsUtil.checkInTransition(admin,DEFAULT_SLEEP_AFTER_MERGE);
+                }
             }
 
             admin.close();
@@ -414,13 +457,8 @@ public class RegionsTool extends AbstractHBaseTool {
 
     @Override
     protected void printUsage() {
-        //printUsage("java " + getClass().getName() + " <options>", "Options:", "");
         printUsage("/region-tool.sh <options>", "Options:", "");
     }
-
-
-
-
 
     public static int parseInt(String s, int defaultValue) {
         return (int) parseLong(s, defaultValue);

@@ -100,7 +100,7 @@ public class BulkDelete {
                 admin.splitRegion(borderlineRegion.getRegionName(), Bytes.toBytes(splitKey));
                 borderSplitted = true;
 
-                checkInTransition(admin);
+                RegionsUtil.checkInTransition(admin,waitTime);
             }
 
         }
@@ -160,13 +160,13 @@ public class BulkDelete {
                     System.out.println("MERGING REGIONS:" + previous + " with " + current);
                     admin.mergeRegions(previous.getEncodedNameAsBytes(), current.getEncodedNameAsBytes(), false);
 
-                    checkInTransition(admin);
+                    RegionsUtil.checkInTransition(admin, waitTime);
 
                     RegionLocator tLocator = connection.getRegionLocator(tableName);
                     previous = StageByDateBuilder.getRegion(tLocator, Bytes.toString(current.getStartKey()), true);
                     System.out.println("New Region:" + previous);
 
-                    checkInTransition(admin);
+                    RegionsUtil.checkInTransition(admin,waitTime);
 
 
                 } else {
@@ -230,31 +230,6 @@ public class BulkDelete {
         }
         ht.close();
         return noOfDeletedRows;
-    }
-
-    private static void  checkInTransition(Admin admin) throws IOException {
-
-        boolean inTransitions = true;
-        Map<String,RegionState> regMap = admin.getClusterStatus().getRegionsInTransition();
-
-
-        while (inTransitions) {
-
-            System.out.println("Sleeping " + waitTime + " ms. until no Region Server in transition....");
-            try {
-                Thread.sleep(waitTime);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            regMap = admin.getClusterStatus().getRegionsInTransition();
-            if (regMap.keySet().isEmpty()) {
-                inTransitions = false;
-            }
-
-        }
-
-
     }
 
     public static HRegionInfo getRegionWithKey (Connection conn, TableName table, String key) throws IOException {

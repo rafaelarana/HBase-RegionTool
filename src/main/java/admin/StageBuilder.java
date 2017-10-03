@@ -37,4 +37,7 @@ public interface StageBuilder {
      * @return List of HRegionInfo
      */
     List<HRegionInfo> getHotList();
+
+    List<HRegionInfo> getLastMonthList() throws IOException;
+    List<HRegionInfo> getLastMonthList(String splitDate) throws IOException;
 }

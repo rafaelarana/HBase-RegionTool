@@ -14,9 +14,11 @@ import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -189,13 +191,13 @@ public class StageByDateBuilder implements StageBuilder {
         }
 
         LOG.debug("Table:" + tableName + "-COLD number of regions=" + coldList.size());
-        if (LOG.isTraceEnabled()) printRegionInfo(coldList);
+        if (LOG.isTraceEnabled()) RegionsUtil.printRegionInfo(coldList);
 
         LOG.debug("Table:" + tableName + "-WARM number of regions=" + warmList.size());
-        if (LOG.isTraceEnabled()) printRegionInfo(warmList);
+        if (LOG.isTraceEnabled()) RegionsUtil.printRegionInfo(warmList);
 
         LOG.debug("Table:" + tableName + "-HOT number of regions=" + hotList.size());
-        if (LOG.isTraceEnabled()) printRegionInfo(hotList);
+        if (LOG.isTraceEnabled()) RegionsUtil.printRegionInfo(hotList);
 
         locator.close();
 
@@ -251,6 +253,40 @@ public class StageByDateBuilder implements StageBuilder {
         return toDelete;
     }
 
+    /**
+     * Returns the list of Regions of the previous month to the actual date
+     * @return
+     * @throws IOException
+     */
+    public List<HRegionInfo> getLastMonthList() throws IOException {
+        return getLastMonthList(getLastMonthSplit());
+    }
+
+
+    /**
+     * Returns the list of Regions of the previous month to the date provided
+     * @param splitDate
+     * @return
+     * @throws IOException
+     */
+    public List<HRegionInfo> getLastMonthList(String splitDate) throws IOException {
+
+        List<HRegionInfo> lm = new ArrayList<>();
+        RegionLocator locator = connection.getRegionLocator(this.tableName);
+
+
+        HRegionInfo r1 = getRegion(locator, splitDate);
+
+        for (HRegionInfo info : hotList) {
+            if (info.compareTo(r1) >= 0) {
+                lm.add(info);
+            }
+
+        }
+        return lm;
+
+    }
+
 
     public static  HRegionInfo getRegion(RegionLocator aLocator, String splitPoint) throws IOException {
 
@@ -269,6 +305,38 @@ public class StageByDateBuilder implements StageBuilder {
     }
 
 
+
+    public static String getCurrent() {
+        Calendar cal = Calendar.getInstance();
+        return dateFormat.format(cal.getTime());
+
+    }
+
+    public static String getPreviousMonth(String splitDate) {
+
+        try {
+            Date date = dateFormat.parse(splitDate);
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(date);
+            cal.add(Calendar.MONTH, -1);
+            return dateFormat.format(cal.getTime());
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.MONTH, -1);
+        return dateFormat.format(cal.getTime());
+
+    }
+
+    public String getLastMonthSplit() {
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.MONTH, -1);
+        return dateFormat.format(cal.getTime());
+
+    }
 
     public String getHotExpirationSplit() {
         Calendar cal = Calendar.getInstance();
@@ -290,11 +358,4 @@ public class StageByDateBuilder implements StageBuilder {
 
     }
 
-    private static void printRegionInfo(List<HRegionInfo> infos) {
-        for (HRegionInfo info : infos) {
-            LOG.trace(" Region: " + info.getRegionNameAsString()
-                    + " Start Key:" + Bytes.toString(info.getStartKey())
-                    + " End Key: " + Bytes.toString(info.getEndKey()));
-        }
-    }
 }
