@@ -161,7 +161,7 @@ public class RegionsTool extends AbstractHBaseTool {
                 }
                 LOG.info("End Planner: " + planner.toString());
 
-                if (plans != null && plans.size()>0)  Thread.sleep(10 * 1000);
+                if (!isReport && plans != null && plans.size()>0)  Thread.sleep(10 * 1000);
 
 
             }

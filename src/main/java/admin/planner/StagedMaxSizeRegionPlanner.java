@@ -27,8 +27,8 @@ public class StagedMaxSizeRegionPlanner extends  SimpleMaxSizeRegionPlanner impl
     public static final String HOT_MAX_SIZE_IN_MB_KEY_PROPERTY = "hbase.normalizer.nonuniform.hot.max.size";
 
     private static final long DEFAULT_COLD_MAX_SIZE_IN_MB = 20 * 1000L;
-    private static final long DEFAULT_WARM_MAX_SIZE_IN_MB = 10 * 1000L;
-    private static final long DEFAULT_HOT_MAX_SIZE_IN_MB = 5 * 1000L;
+    private static final long DEFAULT_WARM_MAX_SIZE_IN_MB = 15 * 1000L;
+    private static final long DEFAULT_HOT_MAX_SIZE_IN_MB = 10 * 1000L;
 
     private long coldMaxRegionSz;
     private long warmMaxRegionSz;
