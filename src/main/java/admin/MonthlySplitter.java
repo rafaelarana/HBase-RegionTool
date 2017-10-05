@@ -76,9 +76,13 @@ public class MonthlySplitter {
                 }
 
                 RegionsUtil.checkInTransition(admin,30*1000);
+
             }
 
         }
+
+        if (admin.isBalancerEnabled())
+            admin.balancer();
 
         admin.close();
 
@@ -100,6 +104,7 @@ public class MonthlySplitter {
         for (HRegionInfo info : lastMonthList) {
             newPrefixList.add(newPrefix +
                     (Bytes.toString(info.getStartKey()).substring(6)));
+
 
         }
         return newPrefixList;

@@ -39,7 +39,7 @@ public class SimpleAverageSizeRegionPlanner extends AbstractRegionPlanner {
     /**
      * Factor used to compare region size against average size
      */
-    int splitFactor;
+    //int splitFactor;
 
 
     public SimpleAverageSizeRegionPlanner(Connection connection, TableName tableName){
