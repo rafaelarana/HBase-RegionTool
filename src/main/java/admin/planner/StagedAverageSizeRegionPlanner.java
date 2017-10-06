@@ -85,6 +85,7 @@ public class StagedAverageSizeRegionPlanner extends SimpleAverageSizeRegionPlann
         StringBuffer str = new StringBuffer();
         str.append("Class:" + StagedAverageSizeRegionPlanner.class);
         str.append(":splitFactor:" + splitFactor);
+        str.append(super.toString());
         return str.toString();
     }
 

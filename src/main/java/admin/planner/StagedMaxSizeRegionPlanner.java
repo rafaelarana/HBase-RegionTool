@@ -85,6 +85,7 @@ public class StagedMaxSizeRegionPlanner extends  SimpleMaxSizeRegionPlanner impl
         str.append(":coldMaxRegionSz:" + coldMaxRegionSz);
         str.append(":warmMaxRegionSz:" + warmMaxRegionSz);
         str.append(":hotMaxRegionSz:").append(hotMaxRegionSz);
+        str.append(super.toString());
         return str.toString();
     }
 }

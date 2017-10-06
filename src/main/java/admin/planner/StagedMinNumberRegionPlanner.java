@@ -126,6 +126,7 @@ public class StagedMinNumberRegionPlanner extends SimpleMinNumberRegionPlanner i
         str.append(":coldMinRegionsNumber:" + coldMinRegionsFactor);
         str.append(":warmMinRegionsNumber:" + warmMinRegionsFactor);
         str.append(":hotMinRegionsNumber:" + hotMinRegionsFactor);
+        str.append(super.toString());
         return str.toString();
     }
 

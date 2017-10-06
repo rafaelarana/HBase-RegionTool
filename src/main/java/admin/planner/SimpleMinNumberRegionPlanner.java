@@ -79,13 +79,14 @@ public class SimpleMinNumberRegionPlanner  extends AbstractRegionPlanner {
 
         int numberOfRegions = tableRegions.size();
 
+
         List<NormalizationPlan> plans = new ArrayList<>();
         int candidateIdx = 0;
         int counter = minNumberOfRegions - numberOfRegions;
-        while (candidateIdx < tableRegions.size()) {
+        while (candidateIdx < numberOfRegions) {
             HRegionInfo hri = tableRegions.get(candidateIdx);
             long regionSize = getRegionSize(hri);
-            if (regionSize > avgRegionSize) {
+            if (regionSize > avgRegionSize || numberOfRegions == 1) {
                 LOG.info("Table " + table + ",  region " + hri.getRegionNameAsString() + " has size "
                         + regionSize + ", more than  avg size, splitting");
                 plans.add(new SplitNormalizationPlan(hri, null));
@@ -103,8 +104,9 @@ public class SimpleMinNumberRegionPlanner  extends AbstractRegionPlanner {
 
     public String toString() {
         StringBuffer str = new StringBuffer();
-        str.append("Class:" + SimpleMinNumberRegionPlanner.class);
+        str.append(":Class:" + SimpleMinNumberRegionPlanner.class);
         str.append(":minNumberOfRegions:" + minNumberOfRegions);
+        str.append(super.toString());
         return str.toString();
     }
 

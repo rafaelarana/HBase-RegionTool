@@ -76,8 +76,9 @@ public class SimpleMaxSizeRegionPlanner  extends AbstractRegionPlanner {
 
     public String toString() {
         StringBuffer str = new StringBuffer();
-        str.append("Class:MaxSizeRegionPlanner");
+        str.append(":Class:MaxSizeRegionPlanner");
         str.append(":maxRegionSz:" + maxRegionSz);
+        str.append(super.toString());
         return str.toString();
     }
 }

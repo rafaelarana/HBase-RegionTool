@@ -160,8 +160,9 @@ public class SimpleMaxNumberRegionPlanner extends AbstractRegionPlanner {
 
     public String toString() {
         StringBuffer str = new StringBuffer();
-        str.append("Class:" + SimpleMaxNumberRegionPlanner.class);
+        str.append(":Class:" + SimpleMaxNumberRegionPlanner.class);
         str.append(":maxNumRegions:" + maxNumRegions);
+        str.append(super.toString());
         return str.toString();
     }
 

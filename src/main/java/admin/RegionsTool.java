@@ -84,6 +84,9 @@ public class RegionsTool extends AbstractHBaseTool {
     protected static final String OPT_NUM_WARM_MONTHS = "num_warm_months";
     protected static final String OPT_NUM_COLD_MONTHS = "num_cold_months";
 
+    protected static final String OPT_SKIP_HOT = "skip_hot";
+    protected static final String OPT_SKIP_WARM = "skip_warm";
+    protected static final String OPT_SKIP_COLD = "skip_cold";
     /**
      * Default number of iterations
      */
@@ -137,13 +140,9 @@ public class RegionsTool extends AbstractHBaseTool {
 
         LOG.info("------------------------------------------");
         LOG.info("Starting execution for Table:" + sTable);
-        if (isReport) {
-            LOG.warn("Running in *** REPORT MODE ***");
-        }
+        if (isReport) LOG.warn("Running in *** REPORT MODE ***");
         LOG.debug("Iterations:"+iterations);
         LOG.info("------------------------------------------");
-
-
 
         while (counter <= iterations ){
 
@@ -261,6 +260,8 @@ public class RegionsTool extends AbstractHBaseTool {
         isReport = cmd.hasOption(OPT_REPORT);
         isAddNewMonth = cmd.hasOption(OPT_ADD_MONTH);
 
+
+
         if (cmd.hasOption(OPT_ITERATIONS)) {
             this.iterations = parseInt(cmd.getOptionValue(OPT_ITERATIONS),DEFAULT_ITERATIONS);
             this.sleep = parseInt(cmd.getOptionValue(OPT_SLEEP),DEFAULT_SLEEP);
@@ -274,6 +275,19 @@ public class RegionsTool extends AbstractHBaseTool {
                 conf.set(SimpleMaxSizeRegionPlanner.HMAX_SIZE_IN_MB_KEY_PROPERTY,cmd.getOptionValue(OPT_MAX_SIZE));
             }
         } else {
+
+            if (cmd.hasOption(OPT_SKIP_COLD)) {
+                conf.set(StagedPlanner.SKIP_COLD_KEY_PROPERTY,cmd.getOptionValue(OPT_SKIP_COLD));
+            }
+
+            if (cmd.hasOption(OPT_SKIP_WARM)) {
+                conf.set(StagedPlanner.SKIP_WARM_KEY_PROPERTY,cmd.getOptionValue(OPT_SKIP_WARM));
+            }
+
+            if (cmd.hasOption(OPT_SKIP_HOT)) {
+                conf.set(StagedPlanner.SKIP_HOT_KEY_PROPERTY,cmd.getOptionValue(OPT_SKIP_HOT));
+            }
+
             // Check for the stage boundaries properties
             if ( cmd.hasOption(OPT_NUM_HOT_MONTHS) ) {
                 conf.set(StageByDateBuilder.NORMALIZER_MONTHS_HOT_KEY_PROPERTY,cmd.getOptionValue(OPT_NUM_HOT_MONTHS));
@@ -377,7 +391,12 @@ public class RegionsTool extends AbstractHBaseTool {
     protected void addOptions() {
 
         // Common options
-        addRequiredOptWithArg("tablename", "Name of the table to normalize");
+        addRequiredOptWithArg(OPT_TABLENAME, "Name of the table to normalize");
+
+        addOptWithArg(OPT_SKIP_COLD, "Skip cold stage area (defaults to false).");
+        addOptWithArg(OPT_SKIP_WARM, "Skip warm stage area (defaults to false).");
+        addOptWithArg(OPT_SKIP_HOT, "Skip hot stage area (defaults to false).");
+
         addOptWithArg(OPT_ITERATIONS, "Number of iterations it will run the normalization process (defaults to 1).");
         addOptWithArg(OPT_SLEEP, "Number of seconds to sleep between iterations  (defaults to 300 secs)");
         addOptNoArg(OPT_REPORT,"Disables plan execution. Only compute the normalization plans.");

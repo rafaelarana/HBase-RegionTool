@@ -52,7 +52,7 @@ public class SimpleAverageSizeRegionPlanner extends AbstractRegionPlanner {
 
         super(connection,tableName,conf);
 
-        this.splitFactor = configuration.getDouble(NORMALIZER_SPLIT_FACTOR_KEY_PROPERTY,DEFAULT_SPLIT_FACTOR);
+        this.splitFactor = configuration.getDouble(NORMALIZER_SPLIT_FACTOR_KEY_PROPERTY, DEFAULT_SPLIT_FACTOR);
 
 
     }
@@ -113,8 +113,9 @@ public class SimpleAverageSizeRegionPlanner extends AbstractRegionPlanner {
 
     public String toString() {
         StringBuffer str = new StringBuffer();
-        str.append("Class:" + SimpleAverageSizeRegionPlanner.class);
+        str.append(":Class:" + SimpleAverageSizeRegionPlanner.class);
         str.append(":splitFactor:" + splitFactor);
+        str.append(super.toString());
         return str.toString();
     }
 

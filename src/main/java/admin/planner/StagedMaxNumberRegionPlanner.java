@@ -104,6 +104,7 @@ public class StagedMaxNumberRegionPlanner extends SimpleMaxNumberRegionPlanner i
         str.append(":coldMaxNumRegions:" + coldMaxNumRegions);
         str.append(":warmMaxNumRegions:" + warmMaxNumRegions);
         str.append(":hotMaxNumRegions:" + hotMaxNumRegions);
+        str.append(super.toString());
         return str.toString();
     }
 

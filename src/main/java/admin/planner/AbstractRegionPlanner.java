@@ -32,6 +32,9 @@ public abstract class AbstractRegionPlanner implements NormalizationPlanner {
     TableName table;
     Connection connection;
     Configuration configuration;
+    boolean skipHot = false;
+    boolean skipWarm = false;
+    boolean skipCold = false;
 
     public AbstractRegionPlanner(Connection connection, TableName tableName){
 
@@ -42,6 +45,9 @@ public abstract class AbstractRegionPlanner implements NormalizationPlanner {
         this.table = tableName;
         this.connection = connection;
         this.configuration = conf;
+        skipCold = conf.getBoolean(StagedPlanner.SKIP_COLD_KEY_PROPERTY,false);
+        skipWarm = conf.getBoolean(StagedPlanner.SKIP_WARM_KEY_PROPERTY,false);
+        skipHot = conf.getBoolean(StagedPlanner.SKIP_HOT_KEY_PROPERTY,false);
 
     }
 
@@ -87,14 +93,23 @@ public abstract class AbstractRegionPlanner implements NormalizationPlanner {
                 return null;
             }
 
-            List<HRegionInfo> hotTableRegions = stageBuilder.getHotList();
-            List<HRegionInfo> warmTableRegions = stageBuilder.getWarmList();
-            List<HRegionInfo> coldTableRegions = stageBuilder.getColdList();
+
+            if (!skipHot) {
+                List<HRegionInfo> hotTableRegions = stageBuilder.getHotList();
+                plans.addAll(getPlansForHot(table, hotTableRegions));
+            }
+
+            if (!skipWarm) {
+                List<HRegionInfo> warmTableRegions = stageBuilder.getWarmList();
+                plans.addAll(getPlansForWarm(table, warmTableRegions));
+            }
+
+            if (!skipCold) {
+                List<HRegionInfo> coldTableRegions = stageBuilder.getColdList();
+                plans.addAll(getPlansForCold(table, coldTableRegions));
+            }
 
 
-            plans.addAll(getPlansForHot(table, hotTableRegions));
-            plans.addAll(getPlansForWarm(table, warmTableRegions));
-            plans.addAll(getPlansForCold(table, coldTableRegions));
         } else  {
             plans.addAll(getPlans(table, tableRegions));
 
@@ -221,6 +236,15 @@ public abstract class AbstractRegionPlanner implements NormalizationPlanner {
             tableServers.add(regionLocation.getServerName());
         }
         return tableServers;
+    }
+
+
+    public String toString() {
+        StringBuffer str = new StringBuffer();
+        str.append(":skipHot:" + skipHot);
+        str.append(":skipWarm:" + skipWarm);
+        str.append(":skipCold:" + skipCold);
+        return str.toString();
     }
 
 
