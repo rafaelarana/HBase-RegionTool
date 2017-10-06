@@ -44,6 +44,9 @@ public class MonthlySplitter {
      */
     public void split(String splitPoint) throws IOException {
 
+
+        LOG.debug("splitPoint:" + splitPoint);
+
         Admin admin = this.connection.getAdmin();
 
         List<HRegionInfo> tableRegions = admin.getTableRegions(tableName);
@@ -59,7 +62,6 @@ public class MonthlySplitter {
         List<HRegionInfo> lastMonthList = stageBuilder.getLastMonthList(StageByDateBuilder.getPreviousMonth(splitPoint));
 
         RegionsUtil.printRegionInfo(lastMonthList);
-
 
         // Gets the list of split points replacing the first part of the key with the prefix
         List<String> splitPointsList = extractSplitPoints(lastMonthList,splitPoint);

@@ -39,7 +39,7 @@ public class SimpleAverageSizeRegionPlanner extends AbstractRegionPlanner {
     /**
      * Factor used to compare region size against average size
      */
-    //int splitFactor;
+    double splitFactor;
 
 
     public SimpleAverageSizeRegionPlanner(Connection connection, TableName tableName){
@@ -52,7 +52,7 @@ public class SimpleAverageSizeRegionPlanner extends AbstractRegionPlanner {
 
         super(connection,tableName,conf);
 
-        this.splitFactor = configuration.getInt(NORMALIZER_SPLIT_FACTOR_KEY_PROPERTY,DEFAULT_SPLIT_FACTOR);
+        this.splitFactor = configuration.getDouble(NORMALIZER_SPLIT_FACTOR_KEY_PROPERTY,DEFAULT_SPLIT_FACTOR);
 
 
     }

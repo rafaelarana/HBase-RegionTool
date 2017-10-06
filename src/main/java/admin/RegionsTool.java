@@ -45,7 +45,8 @@ import java.util.List;
 public class RegionsTool extends AbstractHBaseTool {
 
     private static final Log LOG = LogFactory.getLog(RegionsTool.class);
-
+    private static final int RESULT_OK = 0;
+    private static final int RESULT_ERROR = -1;
 
     protected static final String OPT_TABLENAME = "tablename";
 
@@ -128,16 +129,21 @@ public class RegionsTool extends AbstractHBaseTool {
     protected int doWork() throws Exception {
 
 
-        LOG.debug("Table:" + sTable);
         TableName tableName = TableName.valueOf(sTable);
-
         int counter = 1;
+        int result = RESULT_OK;
         // Init the tool
         init(tableName);
 
-
-
+        LOG.info("------------------------------------------");
+        LOG.info("Starting execution for Table:" + sTable);
+        if (isReport) {
+            LOG.warn("Running in *** REPORT MODE ***");
+        }
         LOG.debug("Iterations:"+iterations);
+        LOG.info("------------------------------------------");
+
+
 
         while (counter <= iterations ){
 
@@ -145,13 +151,10 @@ public class RegionsTool extends AbstractHBaseTool {
 
             LOG.info("Starting Iteration:" + counter);
 
-
-
-
             for (NormalizationPlanner planner: plannerList ) {
 
-
                 LOG.info("Starting Planner: " + planner.toString());
+
                 // Get  the NormalizationPlans for each planner
                 List<NormalizationPlan> plans = planner.computePlanForTable(tableName);
 
@@ -159,10 +162,13 @@ public class RegionsTool extends AbstractHBaseTool {
                 if (!isReport) {
                     normalizeRegions(plans);
                 }
+
                 LOG.info("End Planner: " + planner.toString());
 
-                if (!isReport && plans != null && plans.size()>0)  Thread.sleep(10 * 1000);
-
+                if (!isReport && plans != null && plans.size()>0) {
+                    LOG.info("Sleeping before next planner iterations...bzzzz");
+                    Thread.sleep(10 * 1000);
+                }
 
             }
 
@@ -190,7 +196,13 @@ public class RegionsTool extends AbstractHBaseTool {
         }
 
 
-        return 0;
+        LOG.info("------------------------------------------");
+        LOG.info("RUN SUCCESS");
+        LOG.info("END execution for Table:" + sTable);
+        LOG.info("------------------------------------------");
+
+
+        return result;
     }
 
 
@@ -265,6 +277,7 @@ public class RegionsTool extends AbstractHBaseTool {
             // Check for the stage boundaries properties
             if ( cmd.hasOption(OPT_NUM_HOT_MONTHS) ) {
                 conf.set(StageByDateBuilder.NORMALIZER_MONTHS_HOT_KEY_PROPERTY,cmd.getOptionValue(OPT_NUM_HOT_MONTHS));
+
             }
 
             if ( cmd.hasOption(OPT_NUM_WARM_MONTHS) ) {
@@ -283,11 +296,16 @@ public class RegionsTool extends AbstractHBaseTool {
             useMaxSize = false;
         } else {
 
+
+
             if ( cmd.hasOption(OPT_COLD_MAX_SIZE) ) {
-                conf.set(StagedMaxSizeRegionPlanner.COLD_MAX_SIZE_IN_MB_KEY_PROPERTY,cmd.getOptionValue(OPT_COLD_MAX_SIZE));
+
+                conf.set(StagedMaxSizeRegionPlanner.COLD_MAX_SIZE_IN_MB_KEY_PROPERTY, cmd.getOptionValue(OPT_COLD_MAX_SIZE));
+
             }
 
             if ( cmd.hasOption(OPT_WARM_MAX_SIZE) ) {
+
                 conf.set(StagedMaxSizeRegionPlanner.WARM_MAX_SIZE_IN_MB_KEY_PROPERTY,cmd.getOptionValue(OPT_WARM_MAX_SIZE));
             }
 
@@ -473,6 +491,18 @@ public class RegionsTool extends AbstractHBaseTool {
             l=defaultValue;
         }
         return l;
+    }
+
+
+    private void sanityCheck (String arg, String value, long maxValue) throws IllegalArgumentException {
+
+        long optionValue = Long.getLong(value);
+        if (optionValue > maxValue) {
+            LOG.error("INVALID value. " + arg
+                    + " must be lower than hbase.hregion.max.filesize.limit");
+            throw new IllegalArgumentException();
+
+        }
     }
 
 
